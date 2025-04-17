@@ -1,0 +1,5 @@
+HTTP Method	URL Örneği.(postman)
+GET	/calisanlar	Tüm çalışanları getir
+POST	/calisanlar	Yeni çalışan ekle
+PUT	/calisanlar/1	ID'si 1 olanı güncelle
+DELETE	/calisanlar/1	ID'si 1 olanı sil
