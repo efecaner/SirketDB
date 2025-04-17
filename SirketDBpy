@@ -1,0 +1,77 @@
+from flask import Flask, request, jsonify
+import pyodbc
+
+app = Flask(__name__)
+
+# SQL Server bağlantısı
+def get_connection():
+    return pyodbc.connect(
+        "DRIVER={ODBC Driver 17 for SQL Server};"
+        "SERVER=DESKTOP-6265MH3;"
+        "DATABASE=SirketDB;"
+        "Trusted_Connection=yes;"
+    )
+
+# GET: Tüm çalışanları getir
+@app.route('/Calisanlar', methods=['GET'])
+def get_calisanlar():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Calisanlar")
+    rows = cursor.fetchall()
+    conn.close()
+
+    calisanlar = [
+        {
+            "CalisanID": row[0],
+            "Ad": row[1],
+            "Soyad": row[2],
+            "DepartmanID": row[3]
+        } for row in rows
+    ]
+    return jsonify(calisanlar)
+
+
+# POST: Yeni çalışan ekle
+@app.route('/Calisanlar', methods=['POST'])
+def add_calisan():
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO Calisanlar (Ad, Soyad, DepartmanID) VALUES (?, ?, ?)",
+        (data['Ad'], data['Soyad'], data['DepartmanID'])
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Çalışan eklendi"}), 201
+
+
+# PUT: Belirli bir çalışanı güncelle
+@app.route('/Calisanlar/<int:id>', methods=['PUT'])
+def update_calisan(id):
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE Calisanlar SET Ad = ?, Soyad = ?, DepartmanID = ? WHERE CalisanID = ?",
+        (data['Ad'], data['Soyad'], data['DepartmanID'], id)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Çalışan güncellendi"})
+
+
+# DELETE: Belirli bir çalışanı sil
+@app.route('/Calisanlar/<int:id>', methods=['DELETE'])
+def delete_calisan(id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM Calisanlar WHERE CalisanID = ?", (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Çalışan silindi"})
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
